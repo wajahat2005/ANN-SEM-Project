@@ -1,0 +1,16 @@
+# CS-320 Project P03: DenseNet (Huang et al., CVPR 2017)
+# Reproduction on CIFAR-10 & Medical Transfer on PneumoniaMNIST (MedMNIST v2/v3)
+
+torch>=2.0.0
+torchvision>=0.15.0
+medmnist>=3.0.0
+torchinfo>=1.8.0
+scikit-learn>=1.2.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+tqdm>=4.65.0
+gradio>=4.0.0
+pyyaml>=6.0
+pytest>=7.0.0
+numpy>=1.24.0
+Pillow>=9.5.0

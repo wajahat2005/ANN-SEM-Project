@@ -1,0 +1,44 @@
+# CS-320 Project P03: DenseNet Fixed Baseline Configuration
+# Used for all one-factor-at-a-time ablation studies (seed=42)
+
+experiment_name: "densenet_bc_40_baseline"
+seed: 42
+
+model:
+  name: "densenet_bc_40"
+  depth: 40
+  growth_rate: 12
+  bottleneck: true
+  theta: 0.5
+  drop_rate: 0.0
+  in_channels: 3
+  num_classes: 10
+  small_input: true
+  num_init_features: 24  # 2 * k for DenseNet-BC
+
+cifar:
+  batch_size: 64
+  epochs: 300
+  smoke_epochs: 2
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0001
+  nesterov: true
+  lr_schedule: "multistep"
+  lr_milestones: [150, 225]
+  lr_gamma: 0.1
+  val_size: 5000
+
+pneumonia:
+  batch_size: 64
+  epochs: 50
+  smoke_epochs: 2
+  lr: 0.001
+  momentum: 0.9
+  weight_decay: 0.0001
+  size: 64
+  target_sensitivity: 0.95
+
+ablation:
+  reduced_epochs: 30
+  smoke_epochs: 2
