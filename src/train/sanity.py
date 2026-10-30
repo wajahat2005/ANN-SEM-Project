@@ -34,12 +34,17 @@ def check_initial_loss(
     """
     Checks that initial loss is close to theoretical expectation ln(C).
     """
-    model.eval()
+    # Use train mode during initial loss check so BatchNorm normalizes activations
+    # using mini-batch statistics rather than uninitialized running statistics
+    was_training = model.training
+    model.train()
     criterion = nn.CrossEntropyLoss()
 
     with torch.no_grad():
         outputs = model(inputs)
         loss = criterion(outputs, targets).item()
+
+    model.train(was_training)
 
     expected_loss = math.log(num_classes)
     diff = abs(loss - expected_loss)

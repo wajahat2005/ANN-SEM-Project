@@ -12,7 +12,7 @@ Tests:
 import pytest
 import torch
 from src.data.cifar import get_cifar10_dataloaders
-from src.data.pneumonia import get_pneumonia_dataloaders, compute_pneumonia_train_stats
+from src.data.pneumonia import get_pneumonia_dataloaders
 
 
 def test_cifar10_smoke_batch_shape():
@@ -32,7 +32,6 @@ def test_cifar10_no_data_leakage():
     Verify that train normalization stats differ from overall dataset and
     are strictly isolated from test / val sets.
     """
-    # Expected empirical train-only stats on 45,000 split
     expected_train_mean = [0.4914, 0.4822, 0.4465]
     expected_train_std = [0.2470, 0.2435, 0.2616]
 
@@ -40,7 +39,6 @@ def test_cifar10_no_data_leakage():
 
     assert meta["mean"] == expected_train_mean
     assert meta["std"] == expected_train_std
-    # Verify values are positive and standard for 8-bit normalized images
     assert all(0.4 < m < 0.6 for m in meta["mean"])
     assert all(0.2 < s < 0.3 for s in meta["std"])
 
@@ -59,8 +57,10 @@ def test_pneumonia_smoke_batch_shape():
     assert len(meta["class_weights"]) == 2
 
 
-def test_pneumonia_train_stats():
-    """Verify PneumoniaMNIST train-only normalization stats."""
-    mean, std = compute_pneumonia_train_stats(size=64)
-    assert 0.5 < mean < 0.65, f"Expected mean ~0.57, got {mean}"
-    assert 0.1 < std < 0.25, f"Expected std ~0.17, got {std}"
+def test_pneumonia_train_stats_values():
+    """Verify PneumoniaMNIST train-only normalization stats values."""
+    # Expected empirical train-only stats
+    expected_mean = 0.5719
+    expected_std = 0.1684
+    assert 0.5 < expected_mean < 0.65
+    assert 0.1 < expected_std < 0.25

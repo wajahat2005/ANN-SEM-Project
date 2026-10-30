@@ -169,7 +169,9 @@ class DenseNet(nn.Module):
                 nn.init.constant_(m.weight, 1.0)
                 nn.init.constant_(m.bias, 0.0)
             elif isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
+                # Small normal initialization for classification head ensures uniform initial logits
+                # and theoretical initial loss = -ln(1/C) = ln(C)
+                nn.init.normal_(m.weight, mean=0.0, std=0.01)
                 if m.bias is not None:
                     nn.init.constant_(m.bias, 0.0)
 

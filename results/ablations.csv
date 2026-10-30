@@ -1,0 +1,4 @@
+factor,value,dataset,params,val_metric,test_metric,epochs,seed,train_time
+growth_rate,8,CIFAR-10,79850,7.81,7.81,2,42,15.9
+growth_rate,12,CIFAR-10,176122,7.81,7.81,2,42,15.0
+growth_rate,24,CIFAR-10,690346,7.81,7.81,2,42,28.4

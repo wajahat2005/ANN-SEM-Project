@@ -1,0 +1,26 @@
+# Virtual Environments
+.venv/
+venv/
+ENV/
+
+# Python Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Heavy Deep Learning Checkpoints (keep git lightweight)
+checkpoints/*.pt
+checkpoints/*.pth
+*.pt
+*.pth
+
+# Dataset caches
+data_cache/
+.medmnist/
+medmnist/
+
+# Keep results CSV and PNG artifacts
+!results/*.csv
+!results/*.png
+!results/*.md
