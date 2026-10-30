@@ -164,35 +164,10 @@ def get_cifar10_dataloaders(
         transforms.Normalize(mean=mean, std=std),
     ])
 
-    # Check if CIFAR-10 is already downloaded on disk or smoke mode requested
-    cifar_exists = os.path.exists(os.path.join(data_dir, "cifar-10-batches-py"))
-
-    if smoke or not cifar_exists:
-        try:
-            if smoke:
-                raise RuntimeError("Smoke mode active: using lightweight synthetic dataset.")
-
-            raw_train = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True)
-            test_dataset_raw = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True)
-
-            total_train = len(raw_train)
-            train_count = total_train - val_size
-            generator = torch.Generator().manual_seed(seed)
-            train_indices, val_indices = torch.utils.data.random_split(
-                range(total_train), [train_count, val_size], generator=generator
-            )
-
-            train_set = TransformedSubset(Subset(raw_train, train_indices.indices), transform=train_transform)
-            val_set = TransformedSubset(Subset(raw_train, val_indices.indices), transform=eval_transform)
-            test_set = TransformedSubset(test_dataset_raw, transform=eval_transform)
-        except Exception:
-            # Synthetic fallback for immediate testing without network delays
-            train_set = SyntheticCIFAR10Dataset(num_samples=smoke_samples if smoke else 500, split="train", transform=train_transform)
-            val_set = SyntheticCIFAR10Dataset(num_samples=min(64, smoke_samples), split="val", transform=eval_transform)
-            test_set = SyntheticCIFAR10Dataset(num_samples=min(64, smoke_samples), split="test", transform=eval_transform)
-    else:
-        raw_train = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=False)
-        test_dataset_raw = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=False)
+    # Load CIFAR-10 dataset (download if needed)
+    try:
+        raw_train = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True)
+        test_dataset_raw = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True)
 
         total_train = len(raw_train)
         train_count = total_train - val_size
@@ -201,9 +176,24 @@ def get_cifar10_dataloaders(
             range(total_train), [train_count, val_size], generator=generator
         )
 
-        train_set = TransformedSubset(Subset(raw_train, train_indices.indices), transform=train_transform)
-        val_set = TransformedSubset(Subset(raw_train, val_indices.indices), transform=eval_transform)
-        test_set = TransformedSubset(test_dataset_raw, transform=eval_transform)
+        if smoke:
+            # Use small slice of real CIFAR-10 data for smoke testing
+            train_idx = list(train_indices.indices[:smoke_samples])
+            val_idx = list(val_indices.indices[:min(64, smoke_samples)])
+            test_idx = list(range(min(len(test_dataset_raw), min(64, smoke_samples))))
+            train_set = TransformedSubset(Subset(raw_train, train_idx), transform=train_transform)
+            val_set = TransformedSubset(Subset(raw_train, val_idx), transform=eval_transform)
+            test_set = TransformedSubset(Subset(test_dataset_raw, test_idx), transform=eval_transform)
+        else:
+            train_set = TransformedSubset(Subset(raw_train, train_indices.indices), transform=train_transform)
+            val_set = TransformedSubset(Subset(raw_train, val_indices.indices), transform=eval_transform)
+            test_set = TransformedSubset(test_dataset_raw, transform=eval_transform)
+    except Exception as e:
+        # Fallback to synthetic dataset if offline / download fails
+        print(f"[CIFAR Data] Note: Falling back to synthetic dataset ({e}).")
+        train_set = SyntheticCIFAR10Dataset(num_samples=smoke_samples if smoke else 500, split="train", transform=train_transform)
+        val_set = SyntheticCIFAR10Dataset(num_samples=min(64, smoke_samples), split="val", transform=eval_transform)
+        test_set = SyntheticCIFAR10Dataset(num_samples=min(64, smoke_samples), split="test", transform=eval_transform)
 
     train_loader = DataLoader(
         train_set,

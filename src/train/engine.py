@@ -284,7 +284,13 @@ def train_model(
     os.makedirs(checkpoint_dir, exist_ok=True)
     os.makedirs(results_dir, exist_ok=True)
 
-    scaler = torch.cuda.amp.GradScaler() if device.type == "cuda" else None
+    if device.type == "cuda":
+        try:
+            scaler = torch.amp.GradScaler("cuda")
+        except Exception:
+            scaler = torch.cuda.amp.GradScaler()
+    else:
+        scaler = None
 
     start_epoch = 1
     best_metric_val = 0.0

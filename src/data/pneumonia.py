@@ -154,15 +154,25 @@ def get_pneumonia_dataloaders(
 
     # Attempt to load official MedMNIST dataset
     try:
-        if PneumoniaMNIST is None or smoke:
-            raise RuntimeError("Using synthetic/smoke data pipeline for smoke verification")
+        if PneumoniaMNIST is None:
+            raise RuntimeError("MedMNIST package not installed.")
 
-        train_set = PneumoniaMNIST(split="train", download=True, size=size, root=data_dir, transform=train_transform)
-        val_set = PneumoniaMNIST(split="val", download=True, size=size, root=data_dir, transform=eval_transform)
-        test_set = PneumoniaMNIST(split="test", download=True, size=size, root=data_dir, transform=eval_transform)
+        raw_train = PneumoniaMNIST(split="train", download=True, size=size, root=data_dir, transform=train_transform)
+        raw_val = PneumoniaMNIST(split="val", download=True, size=size, root=data_dir, transform=eval_transform)
+        raw_test = PneumoniaMNIST(split="test", download=True, size=size, root=data_dir, transform=eval_transform)
+
+        if smoke:
+            # Slice real dataset for smoke testing
+            train_set = Subset(raw_train, range(min(len(raw_train), smoke_samples)))
+            val_set = Subset(raw_val, range(min(len(raw_val), min(64, smoke_samples))))
+            test_set = Subset(raw_test, range(min(len(raw_test), min(64, smoke_samples))))
+        else:
+            train_set = raw_train
+            val_set = raw_val
+            test_set = raw_test
 
     except Exception as e:
-        print(f"[Pneumonia Data] Note: Initializing synthetic/smoke data ({e}).")
+        print(f"[Pneumonia Data] Note: Initializing synthetic data ({e}).")
         train_set = SyntheticPneumoniaDataset(size=size, num_samples=smoke_samples if smoke else 500, split="train", transform=train_transform)
         val_set = SyntheticPneumoniaDataset(size=size, num_samples=min(64, smoke_samples), split="val", transform=eval_transform)
         test_set = SyntheticPneumoniaDataset(size=size, num_samples=min(64, smoke_samples), split="test", transform=eval_transform)

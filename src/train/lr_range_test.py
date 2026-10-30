@@ -102,18 +102,27 @@ def run_lr_range_test(
     model.to(device)
 
     # Suggest learning rate: point of steepest negative gradient
+    # Exclude boundary regions (first 10% and last 10%) to prevent numerical boundary artifacts
     gradients = np.gradient(losses)
-    steepest_idx = np.argmin(gradients)
-    suggested_lr = lrs[steepest_idx]
+    start_cut = max(5, int(0.10 * len(gradients)))
+    end_cut = max(start_cut + 1, int(0.90 * len(gradients)))
+    
+    if end_cut > start_cut:
+        steepest_subidx = int(np.argmin(gradients[start_cut:end_cut]))
+        steepest_idx = start_cut + steepest_subidx
+    else:
+        steepest_idx = int(np.argmin(gradients))
+
+    suggested_lr = float(lrs[steepest_idx])
 
     print(f"[LR Range Test] Minimum Loss: {best_loss:.4f}")
-    print(f"[LR Range Test] Suggested LR (steepest descent): {suggested_lr:.4f}")
+    print(f"[LR Range Test] Suggested LR (steepest descent): {suggested_lr:.4e} ({suggested_lr:.5f})")
 
     # Plot results
     plt.figure(figsize=(8, 5))
     plt.plot(lrs, losses, label="Smoothed Loss", color="royalblue", linewidth=2)
     plt.xscale("log")
-    plt.scatter([suggested_lr], [losses[steepest_idx]], color="crimson", zorder=5, label=f"Steepest Descent ({suggested_lr:.4f})")
+    plt.scatter([suggested_lr], [losses[steepest_idx]], color="crimson", zorder=5, label=f"Steepest Descent ({suggested_lr:.2e})")
     plt.xlabel("Learning Rate (log scale)", fontsize=11)
     plt.ylabel("Loss", fontsize=11)
     plt.title("Learning Rate Range Test", fontsize=13)
