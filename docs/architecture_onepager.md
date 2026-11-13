@@ -1,7 +1,7 @@
 # DenseNet Architecture: One-Pager Technical Reference
 **Course:** CS-320: Artificial Neural Networks & Deep Learning  
 **Project:** P03 — Densely Connected Convolutional Networks (Huang et al., CVPR 2017)  
-**Lead Author:** Mohammad Abdul Rehman (Team & Paper Lead)
+**Team:** Mohammad Abdul Rehman,Muhammad Wajahat,Aiman Aslam (Team)
 
 ---
 
