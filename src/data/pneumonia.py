@@ -26,7 +26,7 @@ import os
 from typing import Tuple, Dict, Any, Optional, List
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler, Subset
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 
@@ -156,6 +156,12 @@ def get_pneumonia_dataloaders(
     try:
         if PneumoniaMNIST is None:
             raise RuntimeError("MedMNIST package not installed.")
+
+        # In smoke mode, avoid network download delays if not already cached
+        npz_name = f"pneumoniamnist_{size}.npz" if size != 28 else "pneumoniamnist.npz"
+        npz_path = os.path.join(data_dir, npz_name)
+        if smoke and not os.path.exists(npz_path):
+            raise FileNotFoundError(f"MedMNIST file {npz_name} not cached locally; using synthetic for smoke mode.")
 
         raw_train = PneumoniaMNIST(split="train", download=True, size=size, root=data_dir, transform=train_transform)
         raw_val = PneumoniaMNIST(split="val", download=True, size=size, root=data_dir, transform=eval_transform)

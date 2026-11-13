@@ -166,6 +166,10 @@ def get_cifar10_dataloaders(
 
     # Load CIFAR-10 dataset (download if needed)
     try:
+        cifar_dir = os.path.join(data_dir, "cifar-10-batches-py")
+        if smoke and not os.path.exists(cifar_dir):
+            raise FileNotFoundError("CIFAR-10 not cached locally; using synthetic for smoke mode.")
+
         raw_train = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True)
         test_dataset_raw = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True)
 
