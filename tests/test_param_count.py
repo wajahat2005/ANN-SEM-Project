@@ -25,6 +25,7 @@ from src.utils.param_count import (
     verify_densenet40_params,
     verify_densenet_bc_100_params,
     compare_with_torchvision_densenet121,
+    verify_torchvision_forward_equivalence,
 )
 
 
@@ -61,3 +62,16 @@ def test_densenet121_torchvision_match():
     assert res["match"] is True, (
         f"Custom DenseNet-121 ({res['custom_runtime']}) did not match torchvision ({res['torchvision_runtime']})"
     )
+
+
+def test_densenet121_torchvision_forward_equivalence():
+    """
+    Beyond the lecture verification:
+    Transfer weights from torchvision.models.densenet121 to custom DenseNet-121
+    and assert numerical logit equivalence within float tolerance (atol=1e-5).
+    """
+    res = verify_torchvision_forward_equivalence(atol=1e-5)
+    assert res["is_equivalent"] is True, (
+        f"Custom DenseNet-121 outputs diverged from torchvision! Max diff: {res['max_diff']}"
+    )
+

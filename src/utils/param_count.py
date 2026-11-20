@@ -127,6 +127,59 @@ def compare_with_torchvision_densenet121() -> Dict[str, Any]:
     }
 
 
+def map_torchvision_state_dict_to_custom(tv_state_dict: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+    """
+    Maps state_dict keys from torchvision.models.densenet121 to custom DenseNet.
+    The only naming difference is that torchvision uses 'norm1'/'norm2' inside dense layers,
+    whereas custom uses 'bn1'/'bn2'.
+    """
+    custom_state_dict = {}
+    for k, v in tv_state_dict.items():
+        new_k = k.replace(".norm1.", ".bn1.").replace(".norm2.", ".bn2.")
+        custom_state_dict[new_k] = v
+    return custom_state_dict
+
+
+def verify_torchvision_forward_equivalence(atol: float = 1e-5) -> Dict[str, Any]:
+    """
+    Beyond the lecture verification:
+    Instantiates custom DenseNet-121 and torchvision.models.densenet121, copies torchvision's
+    weights into the custom model, and verifies that the output logits on an identical tensor
+    are numerically identical within tolerance.
+    """
+    import torchvision.models as tv_models
+
+    torch.manual_seed(42)
+    tv_model = tv_models.densenet121(weights=None)
+    custom_model = densenet121_custom(num_classes=1000, in_channels=3, small_input=False)
+
+    # Transfer state dict
+    custom_state_dict = map_torchvision_state_dict_to_custom(tv_model.state_dict())
+    custom_model.load_state_dict(custom_state_dict, strict=True)
+
+    tv_model.eval()
+    custom_model.eval()
+
+    x = torch.randn(2, 3, 224, 224)
+    with torch.no_grad():
+        tv_out = tv_model(x)
+        custom_out = custom_model(x)
+
+    max_diff = (tv_out - custom_out).abs().max().item()
+    is_equivalent = max_diff < atol
+
+    print("[Beyond the Lecture] Custom DenseNet-121 vs Torchvision DenseNet-121 Output Equivalence:")
+    print(f"  - Maximum Logit Difference: {max_diff:.2e}")
+    print(f"  - Tolerance Threshold:      {atol:.2e}")
+    print(f"  - Equivalent:               {is_equivalent}\n")
+
+    return {
+        "max_diff": max_diff,
+        "is_equivalent": is_equivalent,
+        "atol": atol,
+    }
+
+
 def print_torchinfo_summary(model: nn.Module, input_size=(1, 3, 32, 32)):
     """Prints a detailed torchinfo layer breakdown if available."""
     try:
